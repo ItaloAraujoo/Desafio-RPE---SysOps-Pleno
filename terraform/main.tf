@@ -34,6 +34,63 @@ data "aws_caller_identity" "current" {}
 # Obtém informações da região atual
 data "aws_region" "current" {}
 
+# ----------------------------------------------------------------------------
+# RANDOM RESOURCES
+# Geração de strings aleatórias para senhas e identificadores únicos
+# ----------------------------------------------------------------------------
+
+# Senha do banco de dados MySQL
+resource "random_password" "mysql_root_password" {
+  length           = 24
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}|"
+}
+
+resource "random_password" "mysql_user_password" {
+  length           = 20
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}|"
+}
+
+# Sufixo único para recursos que precisam de nomes globalmente únicos
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
+# ----------------------------------------------------------------------------
+# LOCAL VALUES
+# Valores computados utilizados em múltiplos módulos
+# ----------------------------------------------------------------------------
+
+locals {
+  # Nome base com sufixo único
+  name_prefix = "${var.project_name}-${var.environment}"
+
+  # Tags comuns aplicadas a todos os recursos
+  common_tags = merge(
+    var.additional_tags,
+    {
+      Project       = var.project_name
+      Environment   = var.environment
+      ManagedBy     = "Terraform"
+      CreatedAt     = timestamp()
+      AccountId     = data.aws_caller_identity.current.account_id
+      Region        = data.aws_region.current.name
+    }
+  )
+
+  #Configuração do user_data
+  user_data_minikube = templatefile("${path.module}/templates/user_data_minikube.sh.tpl", {
+    mysql_root_password = random_password.mysql_root_password.result
+    mysql_user_password = random_password.mysql_user_password.result
+    mysql_database      = "wordpress"
+    mysql_user          = "wordpress"
+    wordpress_port      = var.wordpress_port
+  })
+
+  # Seleciona o user_data apropriado baseado na variável
+  selected_user_data = var.container_runtime == "minikube"
+}
 
 # ----------------------------------------------------------------------------
 # MODULE: VPC E NETWORKING
@@ -120,3 +177,26 @@ module "compute" {
   depends_on = [module.vpc, module.security]
 }
 
+# ----------------------------------------------------------------------------
+# SECRETS MANAGER
+# ----------------------------------------------------------------------------
+
+resource "aws_secretsmanager_secret" "mysql_credentials" {
+  name                    = "${local.name_prefix}-mysql-credentials-${random_id.suffix.hex}"
+  description             = "Credenciais do MySQL para WordPress"
+  recovery_window_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-mysql-credentials"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "mysql_credentials" {
+  secret_id = aws_secretsmanager_secret.mysql_credentials.id
+  secret_string = jsonencode({
+    root_password = random_password.mysql_root_password.result
+    user_password = random_password.mysql_user_password.result
+    database      = "wordpress"
+    username      = "wordpress"
+  })
+}
