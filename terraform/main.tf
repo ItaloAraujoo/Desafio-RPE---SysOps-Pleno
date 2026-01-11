@@ -97,7 +97,7 @@ locals {
 # ----------------------------------------------------------------------------
 
 module "vpc" {
-  source = "./modules/vpc/variables"
+  source = "./modules/vpc"
 
   # Identificação
   project_name = var.project_name
@@ -123,7 +123,7 @@ module "vpc" {
 # ----------------------------------------------------------------------------
 
 module "security" {
-  source = "./modules/security/variables"
+  source = "./modules/security"
 
   # Identificação
   project_name = var.project_name
@@ -150,7 +150,7 @@ module "security" {
 # ----------------------------------------------------------------------------
 
 module "compute" {
-  source = "./modules/compute/variables"
+  source = "./modules/compute"
 
   # Identificação
   project_name = var.project_name
