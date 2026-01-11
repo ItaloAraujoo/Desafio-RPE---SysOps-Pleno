@@ -155,7 +155,7 @@ variable "root_volume_type" {
 variable "wordpress_port" {
   description = "Porta exposta pelo WordPress"
   type        = number
-  default     = 8080
+  default     = 30000
 }
 
 variable "mysql_port" {
