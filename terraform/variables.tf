@@ -147,3 +147,40 @@ variable "root_volume_type" {
   type        = string
   default     = "gp3"
 }
+
+# ----------------------------------------------------------------------------
+# Variáveis de Aplicação (WordPress/MySQL)
+# ----------------------------------------------------------------------------
+
+variable "wordpress_port" {
+  description = "Porta exposta pelo WordPress"
+  type        = number
+  default     = 8080
+}
+
+variable "mysql_port" {
+  description = "Porta do MySQL"
+  type        = number
+  default     = 3306
+}
+
+variable "container_runtime" {
+  description = "Runtime de containers a ser instalado (minikube)"
+  type        = string
+  default     = "minikube"
+
+  validation {
+    condition     = contains(["minikube"], var.container_runtime)
+    error_message = "O runtime deve ser: minikube."
+  }
+}
+
+# ----------------------------------------------------------------------------
+# Tags Adicionais
+# ----------------------------------------------------------------------------
+
+variable "additional_tags" {
+  description = "Tags adicionais para aplicar em todos os recursos"
+  type        = map(string)
+  default     = {}
+}
