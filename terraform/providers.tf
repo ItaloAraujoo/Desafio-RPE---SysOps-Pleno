@@ -16,15 +16,6 @@ terraform {
       version = "~> 3.5"
     }
   }
-
-  # Descomente para usar backend remoto (recomendado para produção)
-  # backend "s3" {
-  #   bucket         = "seu-bucket-terraform-state"
-  #   key            = "wordpress-challenge/terraform.tfstate"
-  #   region         = "us-east-1"
-  #   encrypt        = true
-  #   dynamodb_table = "terraform-locks"
-  # }
 }
 
 # ============================================================================
