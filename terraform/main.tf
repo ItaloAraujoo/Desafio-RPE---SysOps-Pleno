@@ -8,13 +8,13 @@
 # ----------------------------------------------------------------------------
 
 # Obtém a AMI mais recente do Amazon Linux 2023
-data "aws_ami" "amazon_linux_2023" {
+data "aws_ami" "ubuntu_22_04" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 
   filter {
@@ -86,10 +86,13 @@ locals {
     mysql_database      = "wordpress"
     mysql_user          = "wordpress"
     wordpress_port      = var.wordpress_port
+    CNI_PLUGIN_VERSION  = "v1.3.0"
+    CRICTL_VERSION      = "v1.31.1"
+    CRI_DOCKERD_VERSION = "0.3.4"
   })
 
   # Seleciona o user_data apropriado baseado na variável
-  selected_user_data = var.container_runtime == "minikube"
+  selected_user_data = var.container_runtime == "minikube" ? local.user_data_minikube : null
 }
 
 # ----------------------------------------------------------------------------
@@ -163,7 +166,7 @@ module "compute" {
   security_group_id = module.security.private_sg_id
 
   # Configuração da instância
-  ami_id           = data.aws_ami.amazon_linux_2023.id
+  ami_id           = data.aws_ami.ubuntu_22_04.id
   instance_type    = var.instance_type
   root_volume_size = var.root_volume_size
   root_volume_type = var.root_volume_type
