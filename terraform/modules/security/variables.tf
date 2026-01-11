@@ -35,7 +35,7 @@ variable "admin_ip" {
 variable "wordpress_port" {
   description = "Porta do WordPress"
   type        = number
-  default     = 8080
+  default     = 30000
 }
 
 variable "mysql_port" {
