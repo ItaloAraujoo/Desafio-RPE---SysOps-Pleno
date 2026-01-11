@@ -129,6 +129,63 @@ resource "aws_vpc_security_group_ingress_rule" "private_http_from_vpc" {
   })
 }
 
+# Regra de Ingress: WordPress port da VPC
+resource "aws_vpc_security_group_ingress_rule" "private_wordpress_from_vpc" {
+  security_group_id = aws_security_group.private.id
+  description       = "WordPress port from VPC CIDR"
+  from_port         = var.wordpress_port
+  to_port           = var.wordpress_port
+  ip_protocol       = "tcp"
+  cidr_ipv4         = var.vpc_cidr
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-private-wordpress-from-vpc"
+  })
+}
+
+# Regra de Ingress: WordPress port do SG público (para ALB futuro)
+resource "aws_vpc_security_group_ingress_rule" "private_wordpress_from_public" {
+  security_group_id            = aws_security_group.private.id
+  description                  = "WordPress from public SG (ALB)"
+  from_port                    = var.wordpress_port
+  to_port                      = var.wordpress_port
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.public.id
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-private-wordpress-from-public"
+  })
+}
+
+# Regra de Ingress: MySQL apenas interno (próprio SG)
+resource "aws_vpc_security_group_ingress_rule" "private_mysql_internal" {
+  security_group_id            = aws_security_group.private.id
+  description                  = "MySQL internal communication"
+  from_port                    = var.mysql_port
+  to_port                      = var.mysql_port
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.private.id
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-private-mysql-internal"
+  })
+}
+
+# Regra de Ingress: HTTPS para SSM Agent
+resource "aws_vpc_security_group_ingress_rule" "private_https_ssm" {
+  security_group_id = aws_security_group.private.id
+  description       = "HTTPS for SSM Agent"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  cidr_ipv4         = var.vpc_cidr
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-private-https-ssm"
+  })
+}
+
+
 # Regra de Egress: Saída para Internet via NAT (necessário para updates e downloads)
 resource "aws_vpc_security_group_egress_rule" "private_all" {
   security_group_id = aws_security_group.private.id
