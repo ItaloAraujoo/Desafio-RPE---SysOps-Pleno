@@ -119,11 +119,6 @@ resource "aws_instance" "wordpress" {
     Runtime = "Docker"
   })
 
-  # Tag de volume
-  volume_tags = merge(var.tags, {
-    Name = "${var.name_prefix}-root-volume"
-  })
-
   lifecycle {
     ignore_changes = [
       ami, # Ignorar mudanças de AMI após criação
