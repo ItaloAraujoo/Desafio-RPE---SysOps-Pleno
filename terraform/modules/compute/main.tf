@@ -74,7 +74,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # ----------------------------------------------------------------------------
 # EC2 INSTANCE
-# Instância na subnet privada com Minikube
+# Instância na subnet privada com K3S
 # ----------------------------------------------------------------------------
 
 resource "aws_instance" "wordpress" {
