@@ -65,7 +65,7 @@ variable "allocated_storage" {
 variable "multi_az" {
   description = "Habilitar Multi-AZ"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "tags" {
