@@ -16,9 +16,9 @@ Escolha dos Tamanhos de Subnet (CIDR)
 
 A alocação de IPs foi planejada para eficiência e economia de endereços:
 
-Public: Pequena. Apenas para infraestrutura de borda (ALB/NAT) que consome poucos IPs. | CIDR: /28 | Qtd IPs: 16  | 192.168.0.0/28
-Private A: Média. Espaço suficiente para Autoscaling de nós EC2 e Pods Kubernetes.     | CIDR: /25 | Qtd IPs: 128 | 192.168.0.0/25
-Private B: Grande. Reserva para expansão futura ou serviços de dados adicionais.       | CIDR: /24 | Qtd IPs: 256 | 192.168.10.0/24
+- Public: Pequena. Apenas para infraestrutura de borda (ALB/NAT) que consome poucos IPs. | CIDR: /28 | Qtd IPs: 16  | 192.168.0.0/28
+- Private A: Média. Espaço suficiente para Autoscaling de nós EC2 e Pods Kubernetes.     | CIDR: /25 | Qtd IPs: 128 | 192.168.0.0/25
+- Private B: Grande. Reserva para expansão futura ou serviços de dados adicionais.       | CIDR: /24 | Qtd IPs: 256 | 192.168.10.0/24
 
 Persistência de Dados e Alta Disponibilidade (HA)
 A estratégia de persistência foi desacoplada para garantir que a perda de uma instância EC2 não resulte em perda de dados.
