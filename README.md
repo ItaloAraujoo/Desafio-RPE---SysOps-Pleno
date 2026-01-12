@@ -141,6 +141,7 @@ Tempo estimado: 4 a 6 minutos após a criação da EC2.
 Acesso Público (Usuário Final)
 Obtenha o DNS do Load Balancer gerado pelo Terraform:
 - terraform output alb_dns_name
+
 Acesse esse endereço no navegador. Você deverá ver a tela de instalação do WordPress.
 
 Para verificar se os Pods estão rodando, conecte-se à instância via SSM (pelo Console AWS ou CLI):
