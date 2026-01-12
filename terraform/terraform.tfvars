@@ -24,7 +24,7 @@ private_subnet_cidrs = [
 availability_zones = ["us-east-1a", "us-east-1b"]
 
 # Segurança
-admin_ip = "200.53.192.199/32"  # Altere para seu IP/32
+admin_ip = "0.0.0.0/0"  # Altere para seu IP/32
 
 # Compute
 instance_type    = "t3.large"
@@ -35,7 +35,7 @@ root_volume_type = "gp3"
 enable_rds            = true
 rds_instance_class    = "db.t3.micro"
 rds_allocated_storage = 20
-rds_multi_az          = false
+rds_multi_az          = true
 
 # ALB
 enable_alb = true
