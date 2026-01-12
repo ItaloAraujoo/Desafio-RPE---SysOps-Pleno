@@ -87,23 +87,6 @@ terraform apply
 # Use o output alb_dns_name ou wordpress_url
 ```
 
-##  Outputs
-
-| `wordpress_url` | URL para acessar o WordPress |
-| `alb_dns_name` | DNS do Load Balancer |
-| `rds_endpoint` | Endpoint do banco de dados |
-| `ssm_connect_1a` | Comando SSM para EC2 1a |
-| `ssm_connect_1b` | Comando SSM para EC2 1b |
-
-
-```hcl
-# terraform.tfvars
-enable_rds              = true   # RDS MySQL
-enable_alb              = true   # Load Balancer
-enable_multi_az_compute = true   # Segunda EC2
-```
-
-
 ### Tipos de Instância
 
 ```hcl
