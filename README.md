@@ -148,17 +148,16 @@ Tempo estimado: 4 a 6 minutos após a criação da EC2.
 
 ## Como Testar o Ambiente
 
-Acesso Público (Usuário Final)
-Obtenha o DNS do Load Balancer gerado pelo Terraform:
+### Acesso a aplicação:
+exemplo: aws ssm start-session --target i-0058e16b5e6dec22f --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["30000"],"localPortNumber":["8080"]}'
 
-Acesse esse endereço no navegador. Você deverá ver a tela de instalação do WordPress.
+Esse comando cria um túnel SSH/port forwarding do seu local para a instância.
 
-Para verificar se os Pods estão rodando, conecte-se à instância via SSM (pelo Console AWS ou CLI):
-- aws ssm start-session --target <INSTANCE_ID>
-- exemplo: aws ssm start-session --target i-0058e16b5e6dec22f --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["30000"],"localPortNumber":["8080"]}'
+Encaminha uma porta específica da instância para seu computador local.
+
 - logo após isso digite no navegador: http:localhost:8080
 
-Verificar status do cluster: 
+### Verificar status do cluster: 
 - sudo kubectl get pods -n wordpress
 - sudo kubectl get svc -n wordpress
 
