@@ -111,7 +111,6 @@ O deploy é automatizado via user_data que realiza:
 - sudo ./aws/install
 - aws configure
 - Necessário ter Access key ID e Secret access key
-  
 - Conta AWS com permissões
 
 1. Clone o Repositório
@@ -156,6 +155,9 @@ Esse comando cria um túnel SSH/port forwarding do seu local para a instância.
 Encaminha uma porta específica da instância para seu computador local.
 
 - logo após isso digite no navegador: http:localhost:8080
+
+### OBS: Caso receba erros, devido falta de plugin e esteja rodando com ubuntu. Execute esse comando para baixar o plugin:
+- curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
 
 ### Verificar status do cluster: 
 - sudo kubectl get pods -n wordpress
