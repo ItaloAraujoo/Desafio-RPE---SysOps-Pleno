@@ -94,7 +94,7 @@ rds_instance_class = "db.t3.micro" # RDS básico
 ## Como Subir o Ambiente (Passo a Passo)
 
 OBS:
-O deploy é automatizado via user_data (Cloud-Init), que realiza:
+O deploy é automatizado via user_data que realiza:
 - Instalação do K3s.
 - Aplicação dos manifestos Kubernetes (Deployment, Service, Secret, ConfigMap).
 - As credenciais do banco não são hardcoded no código; elas são injetadas pelo Terraform durante a criação do template.
