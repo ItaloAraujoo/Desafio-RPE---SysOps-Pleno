@@ -106,39 +106,26 @@ O deploy é automatizado via user_data que realiza:
 - Conta AWS com permissões
 
 1. Clone o Repositório
-- git clone <url-repositorio>
+- git clone url-repositorio
 
 2. Configure as Variáveis
 - Edite o arquivo terraform.tfvars:
-
-- Seu IP público para acesso administrativo
-admin_ip = "SEU_IP_PUBLICO/32"
-
-- Nome do projeto
-project_name = "wordpress-challenge / ou nome de sua preferencia"
-
-- Ambiente
-environment = "dev"
-
-enable_rds   = true
-
-rds_multi_az = true  # Alta disponibilidade de banco
 
 3. Inicialize e Aplique
 
 ```bash
 - Inicializar
 cd terraform (necessário estar no diretorio /terraform antes de aplicar o comando abaixo)
-terraform init
+- terraform init
 
 # Validar configuração
-terraform validate
+- terraform validate
 
-- Planejar
-terraform plan
+# Planejar
+- terraform plan
 
-- Aplicar
-terraform apply
+# Aplicar
+- terraform apply
 
 # 4. Acessar WordPress
 # Use o output alb_dns_name ou wordpress_url
@@ -157,12 +144,11 @@ Obtenha o DNS do Load Balancer gerado pelo Terraform:
 Acesse esse endereço no navegador. Você deverá ver a tela de instalação do WordPress.
 
 Para verificar se os Pods estão rodando, conecte-se à instância via SSM (pelo Console AWS ou CLI):
-Conectar na instância
-aws ssm start-session --target <INSTANCE_ID>
+- aws ssm start-session --target <INSTANCE_ID>
 
-Verificar status do cluster
-sudo kubectl get pods -n wordpress
-sudo kubectl get svc -n wordpress
+Verificar status do cluster: 
+- sudo kubectl get pods -n wordpress
+- sudo kubectl get svc -n wordpress
 
 ## 📝 Limpeza do ambiente
 
