@@ -374,7 +374,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http" {
   from_port         = 80
   to_port           = 80
   ip_protocol       = "tcp"
-  cidr_ipv4         = "0.0.0.0/0"
+  cidr_ipv4         = var.admin_ip  # Filtrado por IP autorizado
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-alb-http"
@@ -387,7 +387,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https" {
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
-  cidr_ipv4         = "0.0.0.0/0"
+  cidr_ipv4         = var.admin_ip  # Filtrado por IP autorizado
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-alb-https"
