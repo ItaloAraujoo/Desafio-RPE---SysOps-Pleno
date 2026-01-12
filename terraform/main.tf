@@ -1,16 +1,15 @@
 # ============================================================================
 # MAIN TERRAFORM CONFIGURATION
-# Orquestração dos módulos de infraestrutura
+# Arquitetura: Multi-AZ com K3s, RDS e ALB
 # ============================================================================
 
 # ----------------------------------------------------------------------------
 # DATA SOURCES
 # ----------------------------------------------------------------------------
 
-# Obtém a AMI mais recente do Amazon Linux 2023
 data "aws_ami" "ubuntu_22_04" {
   most_recent = true
-  owners      = ["099720109477"]
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
@@ -28,156 +27,226 @@ data "aws_ami" "ubuntu_22_04" {
   }
 }
 
-# Obtém informações da conta AWS atual
 data "aws_caller_identity" "current" {}
-
-# Obtém informações da região atual
 data "aws_region" "current" {}
 
 # ----------------------------------------------------------------------------
 # RANDOM RESOURCES
-# Geração de strings aleatórias para senhas e identificadores únicos
 # ----------------------------------------------------------------------------
 
-# Senha do banco de dados MySQL
 resource "random_password" "mysql_root_password" {
   length           = 24
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}|"
+  special          = false
 }
 
 resource "random_password" "mysql_user_password" {
   length           = 20
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}|"
+  special          = false
 }
 
-# Sufixo único para recursos que precisam de nomes globalmente únicos
 resource "random_id" "suffix" {
   byte_length = 4
 }
 
 # ----------------------------------------------------------------------------
 # LOCAL VALUES
-# Valores computados utilizados em múltiplos módulos
 # ----------------------------------------------------------------------------
 
 locals {
-  # Nome base com sufixo único
   name_prefix = "${var.project_name}-${var.environment}"
 
-  # Tags comuns aplicadas a todos os recursos
   common_tags = merge(
     var.additional_tags,
     {
-      Project       = var.project_name
-      Environment   = var.environment
-      ManagedBy     = "Terraform"
-      CreatedAt     = timestamp()
-      AccountId     = data.aws_caller_identity.current.account_id
-      Region        = data.aws_region.current.name
+      Project     = var.project_name
+      Environment = var.environment
+      ManagedBy   = "Terraform"
+      CreatedAt   = timestamp()
+      AccountId   = data.aws_caller_identity.current.account_id
+      Region      = data.aws_region.current.name
     }
   )
 
-  #Configuração do user_data
-  user_data_minikube = templatefile("${path.module}/templates/user_data_minikube.sh.tpl", {
+  # User data para K3s com RDS
+  user_data_k3s = templatefile("${path.module}/templates/user_data_k3s.sh.tpl", {
     mysql_root_password = random_password.mysql_root_password.result
     mysql_user_password = random_password.mysql_user_password.result
     mysql_database      = "wordpress"
     mysql_user          = "wordpress"
     wordpress_port      = var.wordpress_port
-    CNI_PLUGIN_VERSION  = "v1.3.0"
-    CRICTL_VERSION      = "v1.31.1"
-    CRI_DOCKERD_VERSION = "0.3.4"
+    rds_endpoint        = var.enable_rds ? module.rds[0].address : "localhost"
   })
-
-  # Seleciona o user_data apropriado baseado na variável
-  selected_user_data = var.container_runtime == "minikube" ? local.user_data_minikube : null
 }
 
 # ----------------------------------------------------------------------------
-# MODULE: VPC E NETWORKING
+# MODULE: VPC
 # ----------------------------------------------------------------------------
 
 module "vpc" {
   source = "./modules/vpc"
 
-  # Identificação
   project_name = var.project_name
   environment  = var.environment
   name_prefix  = local.name_prefix
 
-  # Configuração de rede
   vpc_cidr_primary     = var.vpc_cidr_primary
   vpc_cidr_secondary   = var.vpc_cidr_secondary
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   availability_zones   = var.availability_zones
 
-  # Flow Logs
   enable_flow_logs = var.enable_flow_logs
 
-  # Tags
   tags = local.common_tags
 }
 
 # ----------------------------------------------------------------------------
-# MODULE: SECURITY GROUPS
+# MODULE: SECURITY
 # ----------------------------------------------------------------------------
 
 module "security" {
   source = "./modules/security"
 
-  # Identificação
   project_name = var.project_name
   environment  = var.environment
   name_prefix  = local.name_prefix
 
-  # Dependências de rede
   vpc_id   = module.vpc.vpc_id
   vpc_cidr = var.vpc_cidr_primary
 
-  # Configuração de segurança
   admin_ip       = var.admin_ip
   wordpress_port = var.wordpress_port
   mysql_port     = var.mysql_port
 
-  # Tags
   tags = local.common_tags
 
   depends_on = [module.vpc]
 }
 
 # ----------------------------------------------------------------------------
-# MODULE: COMPUTE (EC2)
+# MODULE: RDS
 # ----------------------------------------------------------------------------
 
-module "compute" {
-  source = "./modules/compute"
+module "rds" {
+  count  = var.enable_rds ? 1 : 0
+  source = "./modules/rds"
 
-  # Identificação
   project_name = var.project_name
   environment  = var.environment
   name_prefix  = local.name_prefix
 
-  # Configuração de rede
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  security_group_id  = module.security.rds_sg_id
+
+  db_name           = "wordpress"
+  db_username       = "admin"
+  db_password       = random_password.mysql_root_password.result
+  db_instance_class = var.rds_instance_class
+  allocated_storage = var.rds_allocated_storage
+  multi_az          = var.rds_multi_az
+
+  tags = local.common_tags
+
+  depends_on = [module.vpc, module.security]
+}
+
+# ----------------------------------------------------------------------------
+# MODULE: ALB
+# ----------------------------------------------------------------------------
+
+module "alb" {
+  count  = var.enable_alb ? 1 : 0
+  source = "./modules/alb"
+
+  name_prefix       = local.name_prefix
   vpc_id            = module.vpc.vpc_id
-  private_subnet_id = module.vpc.private_subnet_ids[0] # Subnet privada na AZ-1a
+  public_subnet_ids = module.vpc.public_subnet_ids
+  security_group_id = module.security.alb_sg_id
+  target_port       = var.wordpress_port
+
+  tags = local.common_tags
+
+  depends_on = [module.vpc, module.security]
+}
+
+# ----------------------------------------------------------------------------
+# MODULE: COMPUTE - EC2 AZ 1a
+# ----------------------------------------------------------------------------
+
+module "compute_1a" {
+  source = "./modules/compute"
+
+  project_name = var.project_name
+  environment  = var.environment
+  name_prefix  = "${local.name_prefix}-1a"
+
+  vpc_id            = module.vpc.vpc_id
+  private_subnet_id = module.vpc.private_subnet_ids[0]
   security_group_id = module.security.private_sg_id
 
-  # Configuração da instância
   ami_id           = data.aws_ami.ubuntu_22_04.id
   instance_type    = var.instance_type
   root_volume_size = var.root_volume_size
   root_volume_type = var.root_volume_type
 
-  # User Data (script de inicialização)
-  user_data = local.selected_user_data
+  user_data = local.user_data_k3s
 
-  # Tags
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    AZ   = var.availability_zones[0]
+    Role = "K3s-WordPress"
+  })
 
-  depends_on = [module.vpc, module.security]
+  depends_on = [module.vpc, module.security, module.rds]
+}
+
+# ----------------------------------------------------------------------------
+# MODULE: COMPUTE - EC2 AZ 1b (Condicional)
+# ----------------------------------------------------------------------------
+
+module "compute_1b" {
+  count  = var.enable_multi_az_compute ? 1 : 0
+  source = "./modules/compute"
+
+  project_name = var.project_name
+  environment  = var.environment
+  name_prefix  = "${local.name_prefix}-1b"
+
+  vpc_id            = module.vpc.vpc_id
+  private_subnet_id = module.vpc.private_subnet_ids[1]
+  security_group_id = module.security.private_sg_id
+
+  ami_id           = data.aws_ami.ubuntu_22_04.id
+  instance_type    = var.instance_type
+  root_volume_size = var.root_volume_size
+  root_volume_type = var.root_volume_type
+
+  user_data = local.user_data_k3s
+
+  tags = merge(local.common_tags, {
+    AZ   = var.availability_zones[1]
+    Role = "K3s-WordPress"
+  })
+
+  depends_on = [module.vpc, module.security, module.rds]
+}
+
+# ----------------------------------------------------------------------------
+# ALB TARGET GROUP ATTACHMENTS
+# ----------------------------------------------------------------------------
+
+resource "aws_lb_target_group_attachment" "wordpress_1a" {
+  count            = var.enable_alb ? 1 : 0
+  target_group_arn = module.alb[0].target_group_arn
+  target_id        = module.compute_1a.instance_id
+  port             = var.wordpress_port
+}
+
+resource "aws_lb_target_group_attachment" "wordpress_1b" {
+  count            = var.enable_alb && var.enable_multi_az_compute ? 1 : 0
+  target_group_arn = module.alb[0].target_group_arn
+  target_id        = module.compute_1b[0].instance_id
+  port             = var.wordpress_port
 }
 
 # ----------------------------------------------------------------------------
@@ -200,6 +269,7 @@ resource "aws_secretsmanager_secret_version" "mysql_credentials" {
     root_password = random_password.mysql_root_password.result
     user_password = random_password.mysql_user_password.result
     database      = "wordpress"
-    username      = "wordpress"
+    username      = "admin"
+    host          = var.enable_rds ? module.rds[0].address : "localhost"
   })
 }
