@@ -16,8 +16,9 @@ Escolha dos Tamanhos de Subnet (CIDR)
 
 A alocação de IPs foi planejada para eficiência e economia de endereços:
 
-- Public: Pequena. Apenas para infraestrutura de borda (ALB/NAT) que consome poucos IPs. | CIDR: /28 | Qtd IPs: 16  | 192.168.0.0/28
-- Private A: Média. Espaço suficiente para Autoscaling de nós EC2 e Pods Kubernetes.     | CIDR: /25 | Qtd IPs: 128 | 192.168.0.0/25
+- Public A: Pequena. Apenas para infraestrutura de borda (ALB/NAT) que consome poucos IPs. | CIDR: /28 | Qtd IPs: 16  | 192.168.0.0/28
+- Public B: Pequena. Para ALB (Alta disponibilidade). | CIDR: /28 | Qtd IPs: 16 | 192.168.0.16/28
+- Private A: Média. Espaço suficiente para Autoscaling de nós EC2 e Pods Kubernetes.     | CIDR: /25 | Qtd IPs: 128 | 192.168.0.128/25
 - Private B: Grande. Reserva para expansão futura ou serviços de dados adicionais.       | CIDR: /24 | Qtd IPs: 256 | 192.168.10.0/24
 
 Persistência de Dados e Alta Disponibilidade (HA)
@@ -114,8 +115,7 @@ O deploy é automatizado via user_data que realiza:
 3. Inicialize e Aplique
 
 ```bash
-- Inicializar
-cd terraform (necessário estar no diretorio /terraform antes de aplicar o comando abaixo)
+# Inicializar
 - terraform init
 
 # Validar configuração
@@ -150,6 +150,13 @@ Para verificar se os Pods estão rodando, conecte-se à instância via SSM (pelo
 Verificar status do cluster: 
 - sudo kubectl get pods -n wordpress
 - sudo kubectl get svc -n wordpress
+
+# Ver eventos do cluster
+- sudo kubectl get events -n wordpress
+
+# Verificar logs do WordPress
+- sudo kubectl logs -n wordpress -l app=wordpress
+
 
 ## 📝 Limpeza do ambiente
 
