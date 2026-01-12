@@ -1,6 +1,10 @@
 # Desafio-RPE---SysOps-Pleno
 Este projeto implementa uma infraestrutura de rede na AWS, seguindo as melhores práticas de arquitetura Multi-AZ, com WordPress containerizado rodando em uma instância EC2 privada.
 
+## Topologia de Rede
+<img width="895" height="554" alt="image" src="https://github.com/user-attachments/assets/7f9e0675-e92c-4f78-8325-e918b4aca75c" />
+
+
 ## Stack Tecnológica
 - IAC: Terraform
 - Cloud: AWS
@@ -47,17 +51,36 @@ terraform/
 - AWS CLI configurado
 - Conta AWS com permissões
 
-### Passos
+1. Clone o Repositório
+git clone <url-repositorio>
+cd aws-wordpress-challenge/terraform
+
+2. Configure as Variáveis
+Edite o arquivo terraform.tfvars:
+
+- Seu IP público para acesso administrativo
+admin_ip = "SEU_IP_PUBLICO/32"
+
+- Nome do projeto
+project_name = "wordpress-challenge / ou nome de sua preferencia"
+
+- Ambiente
+environment = "dev"
+
+3. Inicialize e Aplique
 
 ```bash
-# 1. Inicializar
+- Inicializar
 cd terraform
 terraform init
 
-# 2. Planejar
+# Validar configuração
+terraform validate
+
+- Planejar
 terraform plan
 
-# 3. Aplicar
+- Aplicar
 terraform apply
 
 # 4. Acessar WordPress
