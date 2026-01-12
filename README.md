@@ -123,6 +123,8 @@ O deploy é automatizado via user_data que realiza:
 3. Inicialize e Aplique
 
 ```bash
+cd terraform (necessário estar no diretorio /terraform para aplicar os comandos abaixo)
+
 # Inicializar
 - terraform init
 
