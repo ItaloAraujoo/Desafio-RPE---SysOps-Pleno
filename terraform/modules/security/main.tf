@@ -305,3 +305,116 @@ resource "aws_network_acl_rule" "private_egress_all" {
   rule_action    = "allow"
   cidr_block     = "0.0.0.0/0"
 }
+
+# ----------------------------------------------------------------------------
+# SECURITY GROUP PARA RDS
+# ----------------------------------------------------------------------------
+
+resource "aws_security_group" "rds" {
+  name        = "${var.name_prefix}-rds-sg"
+  description = "Security group para RDS MySQL"
+  vpc_id      = var.vpc_id
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-rds-sg"
+    Type = "Database"
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "rds_mysql_from_private" {
+  security_group_id            = aws_security_group.rds.id
+  description                  = "MySQL from private instances"
+  from_port                    = var.mysql_port
+  to_port                      = var.mysql_port
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.private.id
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-rds-mysql-from-private"
+  })
+}
+
+resource "aws_vpc_security_group_egress_rule" "rds_all" {
+  security_group_id = aws_security_group.rds.id
+  description       = "Allow all outbound"
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-rds-egress-all"
+  })
+}
+
+# ----------------------------------------------------------------------------
+# SECURITY GROUP PARA ALB
+# ----------------------------------------------------------------------------
+
+resource "aws_security_group" "alb" {
+  name        = "${var.name_prefix}-alb-sg"
+  description = "Security group para Application Load Balancer"
+  vpc_id      = var.vpc_id
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-alb-sg"
+    Type = "LoadBalancer"
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http" {
+  security_group_id = aws_security_group.alb.id
+  description       = "HTTP from anywhere"
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-alb-http"
+  })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+  security_group_id = aws_security_group.alb.id
+  description       = "HTTPS from anywhere"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-alb-https"
+  })
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_all" {
+  security_group_id = aws_security_group.alb.id
+  description       = "Allow all outbound"
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-alb-egress-all"
+  })
+}
+
+# Regra: Permitir tráfego do ALB para instâncias privadas
+resource "aws_vpc_security_group_ingress_rule" "private_from_alb" {
+  security_group_id            = aws_security_group.private.id
+  description                  = "Traffic from ALB"
+  from_port                    = var.wordpress_port
+  to_port                      = var.wordpress_port
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.alb.id
+
+  tags = merge(var.tags, {
+    Name = "${var.name_prefix}-private-from-alb"
+  })
+}

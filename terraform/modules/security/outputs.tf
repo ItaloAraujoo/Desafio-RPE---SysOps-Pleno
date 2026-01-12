@@ -31,3 +31,23 @@ output "private_nacl_id" {
   description = "ID da NACL privada"
   value       = aws_network_acl.private.id
 }
+
+output "rds_sg_id" {
+  description = "ID do Security Group do RDS"
+  value       = aws_security_group.rds.id
+}
+
+output "rds_sg_arn" {
+  description = "ARN do Security Group do RDS"
+  value       = aws_security_group.rds.arn
+}
+
+output "alb_sg_id" {
+  description = "ID do Security Group do ALB"
+  value       = aws_security_group.alb.id
+}
+
+output "alb_sg_arn" {
+  description = "ARN do Security Group do ALB"
+  value       = aws_security_group.alb.arn
+}
