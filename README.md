@@ -150,12 +150,13 @@ Tempo estimado: 4 a 6 minutos após a criação da EC2.
 
 Acesso Público (Usuário Final)
 Obtenha o DNS do Load Balancer gerado pelo Terraform:
-- terraform output alb_dns_name
 
 Acesse esse endereço no navegador. Você deverá ver a tela de instalação do WordPress.
 
 Para verificar se os Pods estão rodando, conecte-se à instância via SSM (pelo Console AWS ou CLI):
 - aws ssm start-session --target <INSTANCE_ID>
+- exemplo: aws ssm start-session --target i-0058e16b5e6dec22f --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["30000"],"localPortNumber":["8080"]}'
+- logo após isso digite no navegador: http:localhost:8080
 
 Verificar status do cluster: 
 - sudo kubectl get pods -n wordpress
