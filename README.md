@@ -106,10 +106,10 @@ O deploy é automatizado via user_data que realiza:
 - Conta AWS com permissões
 
 1. Clone o Repositório
-git clone <url-repositorio>
+- git clone <url-repositorio>
 
 2. Configure as Variáveis
-Edite o arquivo terraform.tfvars:
+- Edite o arquivo terraform.tfvars:
 
 - Seu IP público para acesso administrativo
 admin_ip = "SEU_IP_PUBLICO/32"
