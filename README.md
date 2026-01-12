@@ -2,7 +2,8 @@
 Este projeto provisiona uma infraestrutura completa, segura e escalável para hospedar um WordPress utilizando Kubernetes (K3s) sobre instâncias EC2 e banco de dados gerenciado Amazon RDS. Todo o provisionamento é realizado via Terraform (IaC).
 
 ## Topologia de Rede
-<img width="895" height="554" alt="image" src="https://github.com/user-attachments/assets/7f9e0675-e92c-4f78-8325-e918b4aca75c" />
+<img width="526" height="557" alt="image" src="https://github.com/user-attachments/assets/b685b12e-616a-427d-ba95-d37ac77ebcfe" />
+
 
 ## Decisões Técnicas e Arquitetura
 
