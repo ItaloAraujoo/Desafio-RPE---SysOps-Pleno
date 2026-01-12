@@ -163,10 +163,10 @@ Encaminha uma porta específica da instância para seu computador local.
 - sudo kubectl get pods -n wordpress
 - sudo kubectl get svc -n wordpress
 
-# Ver eventos do cluster
+### Verificar eventos do cluster
 - sudo kubectl get events -n wordpress
 
-# Verificar logs do WordPress
+### Verificar logs do WordPress
 - sudo kubectl logs -n wordpress -l app=wordpress
 
 
