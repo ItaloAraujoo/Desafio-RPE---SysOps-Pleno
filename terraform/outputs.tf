@@ -1,43 +1,15 @@
 # ============================================================================
 # TERRAFORM OUTPUTS
-# Informações importantes expostas após o deploy
 # ============================================================================
 
 # ----------------------------------------------------------------------------
-# VPC OUTPUTS
+# VPC
 # ----------------------------------------------------------------------------
 
 output "vpc_id" {
-  description = "ID da VPC criada"
+  description = "ID da VPC"
   value       = module.vpc.vpc_id
 }
-
-output "vpc_cidr_blocks" {
-  description = "Blocos CIDR da VPC"
-  value = {
-    primary   = var.vpc_cidr_primary
-    secondary = var.vpc_cidr_secondary
-  }
-}
-
-output "internet_gateway_id" {
-  description = "ID do Internet Gateway"
-  value       = module.vpc.internet_gateway_id
-}
-
-output "nat_gateway_id" {
-  description = "ID do NAT Gateway"
-  value       = module.vpc.nat_gateway_id
-}
-
-output "nat_gateway_public_ip" {
-  description = "IP público do NAT Gateway"
-  value       = module.vpc.nat_gateway_public_ip
-}
-
-# ----------------------------------------------------------------------------
-# SUBNET OUTPUTS
-# ----------------------------------------------------------------------------
 
 output "public_subnet_ids" {
   description = "IDs das subnets públicas"
@@ -49,109 +21,92 @@ output "private_subnet_ids" {
   value       = module.vpc.private_subnet_ids
 }
 
-output "subnet_details" {
-  description = "Detalhes completos das subnets"
+# ----------------------------------------------------------------------------
+# EC2 Instances
+# ----------------------------------------------------------------------------
+
+output "ec2_instance_1a" {
+  description = "EC2 na AZ 1a"
   value = {
-    public = [
-      for idx, cidr in var.public_subnet_cidrs : {
-        cidr = cidr
-        az   = var.availability_zones[idx]
-        type = "public"
-      }
-    ]
-    private = [
-      for idx, cidr in var.private_subnet_cidrs : {
-        cidr = cidr
-        az   = var.availability_zones[idx]
-        type = "private"
-      }
-    ]
+    instance_id = module.compute_1a.instance_id
+    private_ip  = module.compute_1a.private_ip
+    az          = var.availability_zones[0]
   }
 }
 
-# ----------------------------------------------------------------------------
-# SECURITY GROUP OUTPUTS
-# ----------------------------------------------------------------------------
-
-output "public_security_group_id" {
-  description = "ID do Security Group público"
-  value       = module.security.public_sg_id
-}
-
-output "private_security_group_id" {
-  description = "ID do Security Group privado"
-  value       = module.security.private_sg_id
+output "ec2_instance_1b" {
+  description = "EC2 na AZ 1b"
+  value = var.enable_multi_az_compute ? {
+    instance_id = module.compute_1b[0].instance_id
+    private_ip  = module.compute_1b[0].private_ip
+    az          = var.availability_zones[1]
+  } : null
 }
 
 # ----------------------------------------------------------------------------
-# EC2 OUTPUTS
+# RDS
 # ----------------------------------------------------------------------------
 
-output "ec2_instance_id" {
-  description = "ID da instância EC2"
-  value       = module.compute.instance_id
+output "rds_endpoint" {
+  description = "Endpoint do RDS MySQL"
+  value       = var.enable_rds ? module.rds[0].endpoint : null
 }
 
-output "ec2_private_ip" {
-  description = "IP privado da instância EC2"
-  value       = module.compute.private_ip
-}
-
-output "ec2_instance_state" {
-  description = "Estado atual da instância EC2"
-  value       = module.compute.instance_state
+output "rds_address" {
+  description = "Hostname do RDS"
+  value       = var.enable_rds ? module.rds[0].address : null
 }
 
 # ----------------------------------------------------------------------------
-# SSM CONNECTION
+# ALB
 # ----------------------------------------------------------------------------
 
-output "ssm_connection_command" {
-  description = "Comando para conectar via AWS SSM Session Manager"
-  value       = "aws ssm start-session --target ${module.compute.instance_id}"
+output "alb_dns_name" {
+  description = "DNS do ALB - Acesse o WordPress aqui!"
+  value       = var.enable_alb ? module.alb[0].alb_dns_name : null
 }
 
-output "ssm_port_forward_command" {
-  description = "Comando para port-forward do WordPress via SSM"
-  value       = "aws ssm start-session --target ${module.compute.instance_id} --document-name AWS-StartPortForwardingSession --parameters '{\"portNumber\":[\"${var.wordpress_port}\"],\"localPortNumber\":[\"8080\"]}'"
+output "wordpress_url" {
+  description = "URL do WordPress"
+  value       = var.enable_alb ? "http://${module.alb[0].alb_dns_name}" : null
 }
 
 # ----------------------------------------------------------------------------
-# SECRETS MANAGER OUTPUT
+# SSM Commands
 # ----------------------------------------------------------------------------
 
-output "mysql_credentials_secret_arn" {
-  description = "ARN do secret com credenciais MySQL no Secrets Manager"
-  value       = aws_secretsmanager_secret.mysql_credentials.arn
-  sensitive   = true
+output "ssm_connect_1a" {
+  description = "Comando para conectar na EC2 1a via SSM"
+  value       = "aws ssm start-session --target ${module.compute_1a.instance_id}"
 }
 
-output "mysql_credentials_secret_name" {
+output "ssm_connect_1b" {
+  description = "Comando para conectar na EC2 1b via SSM"
+  value       = var.enable_multi_az_compute ? "aws ssm start-session --target ${module.compute_1b[0].instance_id}" : null
+}
+
+# ----------------------------------------------------------------------------
+# Secrets
+# ----------------------------------------------------------------------------
+
+output "mysql_secret_name" {
   description = "Nome do secret com credenciais MySQL"
   value       = aws_secretsmanager_secret.mysql_credentials.name
 }
 
 # ----------------------------------------------------------------------------
-# INFORMAÇÕES DO PROJETO
+# Resumo
 # ----------------------------------------------------------------------------
 
-output "project_info" {
-  description = "Informações gerais do projeto"
+output "project_summary" {
+  description = "Resumo do projeto"
   value = {
-    project_name      = var.project_name
-    environment       = var.environment
-    region            = data.aws_region.current.name
-    account_id        = data.aws_caller_identity.current.account_id
-    container_runtime = var.container_runtime
-    admin_ip          = var.admin_ip
+    project          = var.project_name
+    environment      = var.environment
+    region           = data.aws_region.current.name
+    runtime          = "K3s"
+    rds_enabled      = var.enable_rds
+    alb_enabled      = var.enable_alb
+    multi_az_compute = var.enable_multi_az_compute
   }
-}
-
-# ----------------------------------------------------------------------------
-# FLOW LOGS OUTPUT (condicional)
-# ----------------------------------------------------------------------------
-
-output "flow_logs_group_name" {
-  description = "Nome do CloudWatch Log Group para VPC Flow Logs"
-  value       = var.enable_flow_logs ? module.vpc.flow_logs_group_name : "Flow Logs desabilitado"
 }
