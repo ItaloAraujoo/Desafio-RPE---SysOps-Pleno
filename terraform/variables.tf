@@ -75,7 +75,7 @@ variable "private_subnet_cidrs" {
 variable "admin_ip" {
   description = "IP do administrador (CIDR)"
   type        = string
-  default     = "0.0.0.0/0"
+  default     = "0.0.0.0/0" # Alterar e colocar seu IP /32
 }
 
 variable "enable_flow_logs" {
