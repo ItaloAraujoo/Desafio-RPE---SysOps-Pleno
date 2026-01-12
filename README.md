@@ -158,7 +158,7 @@ Encaminha uma porta específica da instância para seu computador local.
 
 ### Acesso via DNS:
 - comando para pegar url: terraform output wordpress_url
-O acesso é filtrado, defina o seu IP publico através do tfvars.
+- O acesso é filtrado, defina o seu IP publico através do tfvars.
 
 ### OBS: Caso receba erros, devido falta de plugin e esteja rodando com ubuntu. Execute esse comando para baixar o plugin:
 - curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
