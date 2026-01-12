@@ -104,7 +104,14 @@ O deploy é automatizado via user_data que realiza:
 ### Pré-requisitos
 
 - Terraform >= 1.6
-- AWS CLI configurado
+- AWS CLI configurado: exemplo de configuração abaixo.
+- AWS - UBUNTU
+- curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+- unzip awscliv2.zip
+- sudo ./aws/install
+- aws configure
+- Necessário ter Access key ID e Secret access key
+  
 - Conta AWS com permissões
 
 1. Clone o Repositório
@@ -173,3 +180,7 @@ O maior problema enfrentado foi o erro cri-dockerd usando o minikube.
 No Minikube (Driver None): O Kubernetes moderno (1.24+) não fala mais nativamente com o Docker. Para eles conversarem, você precisa instalar um "tradutor" manual chamado cri-dockerd, além de plugins de rede (CNI) e configurar arquivos de sistema (systemd). Qualquer versão errada entre esses 4 componentes quebra tudo.
 
 No K3s: Ele removeu o Docker da equação. O K3s já traz embutido o Containerd (que é o motor que roda containers hoje em dia). Ele não precisa de tradutor. Você instala o K3s e ele já tem o motor dentro dele funcionando.
+
+
+## Próximos passos
+CI/CD para aplicar IaC automaticamente
