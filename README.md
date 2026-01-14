@@ -192,3 +192,5 @@ No K3s: Ele removeu o Docker da equação. O K3s já traz embutido o Containerd 
 
 ## Próximos passos
 CI/CD para aplicar IaC automaticamente
+
+Realizando teste no CI/CD
