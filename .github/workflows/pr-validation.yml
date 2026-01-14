@@ -1,0 +1,123 @@
+# =============================================================================
+# PR Validation Workflow
+# =============================================================================
+# Executa validações automáticas em Pull Requests
+# =============================================================================
+
+name: 'PR Validation'
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # ===========================================================================
+  # Checklist automático
+  # ===========================================================================
+  checklist:
+    name: 'PR Checklist'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
+      - name: 'Verificar arquivos modificados'
+        id: changes
+        run: |
+          echo "Arquivos modificados:"
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }}
+          
+          # Verificar se há mudanças no Terraform
+          if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q "^terraform/"; then
+            echo "terraform_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "terraform_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Adicionar checklist ao PR'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `### Checklist de Validação
+            
+            Por favor, verifique os itens abaixo antes do merge:
+            
+            #### Código
+            - [ ] Código segue os padrões do projeto
+            - [ ] Variáveis sensíveis não estão hardcoded
+            - [ ] Terraform fmt foi executado
+            
+            #### Segurança
+            - [ ] Security Groups estão restritivos
+            - [ ] Não há recursos públicos desnecessários
+            - [ ] Credenciais estão no Secrets Manager
+            
+            #### Documentação
+            - [ ] README atualizado (se necessário)
+            - [ ] Comentários no código (se necessário)
+            
+            #### Testes
+            - [ ] terraform validate passou
+            - [ ] terraform plan revisado
+            
+            ---
+            *Checklist automático gerado pelo CI/CD*`;
+            
+            // Verificar se já existe um comentário de checklist
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const existingComment = comments.data.find(c => 
+              c.body.includes('Checklist de Validação') && 
+              c.user.type === 'Bot'
+            );
+            
+            if (!existingComment) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
+
+  # ===========================================================================
+  # Validação de custos (estimativa)
+  # ===========================================================================
+  cost-estimate:
+    name: 'Cost Estimate'
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'infrastructure')
+    
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.0'
+
+      - name: 'Configurar AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: 'Infracost'
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+        continue-on-error: true
+
+      - name: 'Gerar estimativa'
+        run: |
+          cd terraform
+          terraform init -backend=false
+          infracost breakdown --path . --format table || echo "Infracost não configurado"
+        continue-on-error: true
