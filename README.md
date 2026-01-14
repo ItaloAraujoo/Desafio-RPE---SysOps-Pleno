@@ -1,4 +1,4 @@
-# Desafio-RPE---SysOps-Pleno
+# Desafio - SysOps-Pleno-RPE
 Este projeto provisiona uma infraestrutura completa, segura e escalável para hospedar um WordPress utilizando Kubernetes (K3s) sobre instâncias EC2 e banco de dados gerenciado Amazon RDS. Todo o provisionamento é realizado via Terraform (IaC).
 
 ## Arquitetura Cloud AWS
