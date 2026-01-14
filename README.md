@@ -1,7 +1,7 @@
 # Desafio-RPE---SysOps-Pleno
 Este projeto provisiona uma infraestrutura completa, segura e escalável para hospedar um WordPress utilizando Kubernetes (K3s) sobre instâncias EC2 e banco de dados gerenciado Amazon RDS. Todo o provisionamento é realizado via Terraform (IaC).
 
-## Topologia de Rede
+## Arquitetura Cloud AWS
 <img width="526" height="557" alt="image" src="https://github.com/user-attachments/assets/b685b12e-616a-427d-ba95-d37ac77ebcfe" />
 
 
@@ -193,4 +193,5 @@ No K3s: Ele removeu o Docker da equação. O K3s já traz embutido o Containerd 
 ## Próximos passos
 CI/CD para aplicar IaC automaticamente
 
-Realizando teste no CI/CD...
+### CI/CD implementado!
+### Orientações em breve ...
