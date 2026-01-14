@@ -55,4 +55,5 @@ enable_flow_logs = true
 additional_tags = {
   Owner   = "DevOps"
   Purpose = "WordPress Challenge - K3s"
+  TestCI = "true"
 }
