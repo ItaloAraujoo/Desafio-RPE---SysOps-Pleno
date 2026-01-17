@@ -190,8 +190,62 @@ No Minikube (Driver None): O Kubernetes moderno (1.24+) não fala mais nativamen
 No K3s: Ele removeu o Docker da equação. O K3s já traz embutido o Containerd (que é o motor que roda containers hoje em dia). Ele não precisa de tradutor. Você instala o K3s e ele já tem o motor dentro dele funcionando.
 
 
-## Próximos passos
-CI/CD para aplicar IaC automaticamente
+## CI/CD
+#### O projeto inclui pipeline CI/CD com GitHub Actions para automatizar validação e deploy da infraestrutura.
 
-### CI/CD implementado!
-### Orientações em breve ...
+#### Configuração do CI/CD
+1. Configurar Secrets no GitHub
+- Acesse: Settings → Secrets and variables → Actions → New repository secret
+- SECRET: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+
+2. (Opcional) Configurar Backend Remoto S3
+#### Para equipes ou CI/CD em produção, recomenda-se usar estado remoto:
+- Executar script para criar bucket S3 + DynamoDB
+- chmod +x scripts/setup-backend.sh
+- ./scripts/setup-backend.sh
+
+4. (Opcional) Configurar Environment Protection
+- Para exigir aprovação antes do deploy:
+- Settings → Environments → New environment
+
+#### Como Usar o CI/CD
+- Deploy via Pull Request (Recomendado)
+1. Criar branch (Para este projeto deixei na branch main, realizar a edição no codigo para usar em outra branch)
+git checkout -b feature/minha-alteracao
+
+2. Fazer alterações
+vim terraform/terraform.tfvars
+
+3. Commit e push
+git add .
+git commit -m "feat: minha alteração"
+git push origin feature/minha-alteracao
+
+4. Criar Pull Request no GitHub
+-    → Pipeline executa Validate + Plan
+-    → Comentário automático com o plano
+-    → Revisar e aprovar PR
+-    → Merge para main
+-    → Apply automático
+
+#### Terraform Plan
+- Gera plano de execução
+- Comenta no PR (se aplicável)
+- Salva artifact do plano
+
+#### Terraform Apply
+- Executa apenas após merge na main
+- Ou via execução manual
+- Aplica as mudanças na AWS
+
+####  Terraform Destroy
+- Apenas via execução manual
+- Requer environment destruction
+- Remove toda a infraestrutura
+
+### Observação Importante: 
+- Temos um filtro no workflow que só dispara se mudar algo dentro do diretorio terraform/:
+- paths: 'terraform/**'      #### Só dispara se mudar algo aqui
+- '.github/workflows/**'
+
+#### Isso foi criado para evitar execuções desnecessárias, mas pode ser alterado.
