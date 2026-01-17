@@ -216,9 +216,9 @@ git checkout -b feature/minha-alteracao
 vim terraform/terraform.tfvars
 
 3. Commit e push
-git add .
-git commit -m "feat: minha alteração"
-git push origin feature/minha-alteracao
+- git add .
+- git commit -m "feat: minha alteração"
+- git push origin feature/minha-alteracao
 
 4. Criar Pull Request no GitHub
 -    → Pipeline executa Validate + Plan
