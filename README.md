@@ -49,6 +49,15 @@ SSH (Porta 22) não é exposto. O acesso administrativo é feito via AWS Systems
 - Banco de Dados: RDS
 - SO: Ubuntu
 
+##  Por que K3s?
+O K3s resolve o problema de incompatibilidade entre o Kubernetes moderno e o Docker, empacotando tudo o que você precisa em um único arquivo.
+O maior problema enfrentado foi o erro cri-dockerd usando o minikube.
+
+No Minikube (Driver None): O Kubernetes moderno (1.24+) não fala mais nativamente com o Docker. Para eles conversarem, você precisa instalar um "tradutor" manual chamado cri-dockerd, além de plugins de rede (CNI) e configurar arquivos de sistema (systemd). Qualquer versão errada entre esses 4 componentes quebra tudo.
+
+No K3s: Ele removeu o Docker da equação. O K3s já traz embutido o Containerd (que é o motor que roda containers hoje em dia). Ele não precisa de tradutor. Você instala o K3s e ele já tem o motor dentro dele funcionando.
+
+
 ## Estrutura do Projeto
 
 ```
@@ -179,16 +188,6 @@ Encaminha uma porta específica da instância para seu computador local.
 ```bash
 terraform destroy
 ```
-
-
-##  Por que K3s?
-O K3s resolve o problema de incompatibilidade entre o Kubernetes moderno e o Docker, empacotando tudo o que você precisa em um único arquivo.
-O maior problema enfrentado foi o erro cri-dockerd usando o minikube.
-
-No Minikube (Driver None): O Kubernetes moderno (1.24+) não fala mais nativamente com o Docker. Para eles conversarem, você precisa instalar um "tradutor" manual chamado cri-dockerd, além de plugins de rede (CNI) e configurar arquivos de sistema (systemd). Qualquer versão errada entre esses 4 componentes quebra tudo.
-
-No K3s: Ele removeu o Docker da equação. O K3s já traz embutido o Containerd (que é o motor que roda containers hoje em dia). Ele não precisa de tradutor. Você instala o K3s e ele já tem o motor dentro dele funcionando.
-
 
 ## CI/CD
 #### O projeto inclui pipeline CI/CD com GitHub Actions para automatizar validação e deploy da infraestrutura.
